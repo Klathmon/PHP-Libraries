@@ -2,4 +2,6 @@ My drop-in and use PHP Libraries. (Requires PHP >= 5.3)
 
 To use it, put the repo inside your includes/library directory, and include the Loader.php file. That file will take care of all the includes via an AutoLoader.
 
-Everything inside the Packages folder is under the Klathmon namespace, sub-folders inside there have their own sub-namespaces. Loader.php supports unlimited depth (within reason) with sub-namespaces in the Packages directory.
+Everything inside the Klathmon folder is under the Klathmon namespace, sub-folders inside there have their own sub-namespaces. Loader.php supports unlimited depth (within reason) with sub-namespaces in the Klathmon directory.
+
+Everything outside the Klathmon directory is an outisde library that I have included.

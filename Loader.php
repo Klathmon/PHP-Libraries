@@ -15,11 +15,23 @@ spl_autoload_register(__NAMESPACE__ . '\AutoLoader');
 
 function AutoLoader($class)
 {
-    $path    = __DIR__ . DIRECTORY_SEPARATOR . 'Packages' . DIRECTORY_SEPARATOR;
-    $library = explode('\\', $class);
+    $namespaceArray = explode('\\', $class);
 
-    if ($library[0] == __NAMESPACE__) {
-        foreach ($library as $package) {
+    $library = array_shift($namespaceArray);
+
+    if ($library == __NAMESPACE__) {
+        //Any of my classes.
+        $path = __DIR__ . DIRECTORY_SEPARATOR . 'Packages' . DIRECTORY_SEPARATOR;
+    } elseif ($library == 'Imagine') {
+        //Imagine image processing system.
+        $path = __DIR__ . DIRECTORY_SEPARATOR . $library . DIRECTORY_SEPARATOR;
+    } else {
+        $path = '';
+    }
+
+
+    if ($path != '') {
+        foreach ($namespaceArray as $package) {
             $directory = $path . $package;
             $file      = $path . $package . '.php';
             if (is_dir($directory)) {

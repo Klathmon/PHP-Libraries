@@ -22,6 +22,11 @@ namespace Klathmon\Crypt;
 class Symmetric
 {
     /**
+     * Version number, If i want to upgrade this in the future, increment the version number (integer only) to still
+     * be able to decrypt cipherText created by the old version.
+     */
+    const VERSION = 1;
+    /**
      * @var string the key used for encryption.
      */
     private $key;
@@ -125,6 +130,7 @@ class Symmetric
      *
      * @return string
      * @throws \Exception 1: Data is empty or is not a string. 2: MAC Error, data is corrupt or has been tampered with.
+     * 3: Version number is not recognized
      */
     public function decrypt($data)
     {
@@ -132,18 +138,26 @@ class Symmetric
             throw new \Exception('Data is empty or is not a string!', 1);
         }
 
-        list($salt, $encrypted, $mac, $macHash, $pbkdf2Hash, $rounds, $cipher, $mode)
+        list($versionNumber, $salt, $encrypted, $mac, $macHash, $pbkdf2Hash, $rounds, $cipher, $mode)
             = $this->decodeCipherText(trim($data));
 
-        list ($cipherKey, $macKey, $iv) = $this->stretchKey($this->key, $salt, $cipher, $mode, $rounds, $pbkdf2Hash);
+        switch ($versionNumber) {
+        case 1:
+            list ($cipherKey, $macKey, $iv) = $this->stretchKey(
+                $this->key, $salt, $cipher, $mode, $rounds, $pbkdf2Hash
+            );
 
-        if (!$this->macMatches($mac, $encrypted, $macKey, $macHash, $cipher, $mode)) {
-            throw new \Exception('MAC does not match data!', 2);
+            if (!$this->macMatches($mac, $encrypted, $macKey, $macHash, $cipher, $mode)) {
+                throw new \Exception('MAC does not match data!', 2);
+            }
+
+            $decrypted = mcrypt_decrypt($cipher, $cipherKey, $encrypted, $mode, $iv);
+
+            $output = $this->unpad($decrypted, $cipher, $mode);
+            break;
+        default:
+            throw new \Exception('Version number not recognized!', 3);
         }
-
-        $decrypted = mcrypt_decrypt($cipher, $cipherKey, $encrypted, $mode, $iv);
-
-        $output = $this->unpad($decrypted, $cipher, $mode);
 
         return $output;
     }
@@ -153,9 +167,7 @@ class Symmetric
      * Encodes the given values into a formatted string that can be stored in a database.
      *
      * Output Format:
-     * Base64[saltSize|macSize|rounds|macHashAlgo|pbkdf2HashAlgo|cipher|mode|Encrypted[(plaintext)(cipher)(mode)](mac)(salt)]
-     *
-     * TODO: add a version number here for backwards compatibility.
+     * Base64[version|saltSize|macSize|rounds|macHashAlgo|pbkdf2HashAlgo|cipher|mode|Encrypted[(plaintext)(cipher)(mode)](mac)(salt)]
      *
      * @param string $salt
      * @param string $encrypted
@@ -173,7 +185,8 @@ class Symmetric
         $saltSize = strlen($salt);
         $macSize  = strlen($mac);
 
-        $data = $saltSize . '|';
+        $data = self::VERSION . '|';
+        $data .= $saltSize . '|';
         $data .= $macSize . '|';
         $data .= $rounds . '|';
         $data .= $macHash . '|';
@@ -189,8 +202,6 @@ class Symmetric
     /**
      * Decodes the given cipherText, and returns an array of values to be used in the class.
      *
-     * TODO: add version number parsing.
-     *
      * @param string $data
      *
      * @return array
@@ -198,18 +209,21 @@ class Symmetric
      */
     private function decodeCipherText($data)
     {
-        $data = base64_decode($data);
+        $numberOfThings = 9;
+        $data           = base64_decode($data);
 
-        list($saltSize, $macSize, $rounds, $macHash, $pbkdf2Hash, $cipher, $mode, $data) = explode('|', $data, 8);
+        list($version, $saltSize, $macSize, $rounds, $macHash, $pbkdf2Hash, $cipher, $mode, $data) = explode(
+            '|', $data, $numberOfThings
+        );
 
         $encrypted = substr($data, 0, -($macSize + $saltSize));
         $mac       = substr($data, -($macSize + $saltSize), -$saltSize);
         $salt      = substr($data, -$saltSize);
 
 
-        $return = array($salt, $encrypted, $mac, $macHash, $pbkdf2Hash, $rounds, $cipher, $mode);
+        $return = array($version, $salt, $encrypted, $mac, $macHash, $pbkdf2Hash, $rounds, $cipher, $mode);
 
-        for ($x = 0; $x != 8; $x++) {
+        for ($x = 0; $x != $numberOfThings; $x++) {
             $item = $return[$x];
             if (!isset($item) || !is_string($item)) {
                 throw new \Exception('Incorrectly formatted string', 1);

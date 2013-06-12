@@ -15,6 +15,7 @@ namespace Klathmon;
  */
 class Compression
 {
+    //Adding stuff to test!
     /**
      * @var bool[]
      */

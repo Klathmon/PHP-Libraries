@@ -21,7 +21,7 @@ function AutoLoader($class)
 
     if ($library == __NAMESPACE__) {
         //Any of my classes.
-        $path = __DIR__ . DIRECTORY_SEPARATOR . 'Packages' . DIRECTORY_SEPARATOR;
+        $path = __DIR__ . DIRECTORY_SEPARATOR . 'Klathmon' . DIRECTORY_SEPARATOR;
     } elseif ($library == 'Imagine') {
         //Imagine image processing system.
         $path = __DIR__ . DIRECTORY_SEPARATOR . $library . DIRECTORY_SEPARATOR;

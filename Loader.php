@@ -22,13 +22,14 @@ function AutoLoader($class)
     if ($library == __NAMESPACE__) {
         //Any of my classes.
         $path = __DIR__ . DIRECTORY_SEPARATOR . 'Klathmon' . DIRECTORY_SEPARATOR;
-    } elseif ($library == 'Imagine') {
-        //Imagine image processing system.
-        $path = __DIR__ . DIRECTORY_SEPARATOR . $library . DIRECTORY_SEPARATOR;
+    } elseif ($library == 'WideImage') {
+        //WideImage Library.
+        $path           = __DIR__ . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR;
+        $namespaceArray = array($library);
     } elseif ($library == 'Cpdf' || $library == 'Cezpdf') {
         //Cpdf PDF Library.
         $path           = __DIR__ . DIRECTORY_SEPARATOR . 'Cpdf' . DIRECTORY_SEPARATOR;
-        $namespaceArray = array($library); //Cpdf doesn't use namespaces, so just reset the array so the for will run.
+        $namespaceArray = array($library); //Cpdf doesn't use namespaces, so just reset the array so the 'for' will run.
     } else {
         $path = '';
     }

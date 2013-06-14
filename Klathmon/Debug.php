@@ -8,6 +8,8 @@ namespace Klathmon;
 
 abstract class Debug
 {
+    private static $emailAddress;
+
     public static function dump()
     {
         $args = func_get_args();
@@ -37,5 +39,22 @@ abstract class Debug
         $result = ob_get_clean();
 
         return $result;
+    }
+
+    public static function setEmail($address)
+    {
+        self::$emailAddress = $address;
+    }
+
+    public static function email()
+    {
+        if (isset(self::$emailAddress)) {
+            $message = call_user_func_array('self::get', func_get_args());
+
+            mail(self::$emailAddress, 'Email Dump', $message);
+        } else {
+            throw new \Exception('No Email Address Set! Set an email address with ' . __CLASS__
+            . '::setEmail($address);');
+        }
     }
 }

@@ -30,6 +30,10 @@ function AutoLoader($class)
         //Cpdf PDF Library.
         $path           = __DIR__ . DIRECTORY_SEPARATOR . 'Cpdf' . DIRECTORY_SEPARATOR;
         $namespaceArray = array($library); //Cpdf doesn't use namespaces, so just reset the array so the 'for' will run.
+    } elseif ($library == 'UAParser') {
+        //UAParser user agent parser.
+        $path           = __DIR__ . DIRECTORY_SEPARATOR . 'UA-Parser' . DIRECTORY_SEPARATOR;
+        $namespaceArray = array($library);
     } else {
         $path = '';
     }

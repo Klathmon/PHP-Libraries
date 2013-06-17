@@ -210,6 +210,7 @@ abstract class Debug
 
         if (count($reflect->getConstants()) != 0) {
             //Constants
+            $output .= '<br/>';
             foreach ($reflect->getConstants() as $constName => $value) {
                 $nameFormat = "Constant[<span style=\"color: black;\">$constName</style>]";
                 $output .= self::dumpSingle($value, $nameFormat, $indent + 1, true);
@@ -218,8 +219,8 @@ abstract class Debug
 
         if (count($reflect->getProperties()) != 0) {
             //Properties
+            $output .= '<br/>';
             foreach ($reflect->getProperties() as $property) {
-
                 $view = ($property->isPrivate() ? 'Private' : ($property->isProtected() ? 'Protected' : 'Public'));
 
                 $property->setAccessible(true);
@@ -244,6 +245,42 @@ abstract class Debug
                 set_error_handler($oldErrorHandler);
 
                 $output .= self::dumpSingle($realValue, $name, $indent + 1, false);
+            }
+        }
+
+        if (count($reflect->getMethods()) != 0) {
+            //Methods
+            $output .= '<br/>';
+            foreach ($reflect->getMethods() as $method) {
+                $view   = ($method->isPrivate() ? 'Private' : ($method->isProtected() ? 'Protected' : 'Public'));
+                $static = ($method->isStatic() ? ' Static' : '');
+
+                $output .= self::getIndent($indent + 1) . $view . $static . ' <span style="color: #0099c5">'
+                    . $method->getName() . '</span>(';
+
+                $parameters = $method->getParameters();
+                foreach ($parameters as $parameter) {
+                    if ($parameter != reset($parameters)) {
+                        $output .= ', ';
+                    }
+                    $output .= '<span style="color: red;">$' . $parameter->getName() . '</span>';
+
+                    try {
+                        $defaultValue = $parameter->getDefaultValue();
+                        if (is_string($defaultValue) || $defaultValue == '') {
+                            $output .= ' = <span style="color: green;">"' . $defaultValue . '"</span>';
+                        } elseif (is_bool($defaultValue)) {
+                            $output
+                                .= ' = <span style="color: #92008d;">' . ($defaultValue ? 'TRUE' : 'FALSE') . '</span>';
+                        } else {
+                            $output .= ' = <span style="color: #0099c5;">' . $defaultValue . '</span>';
+                        }
+                    } catch (\Exception $e) {
+
+                    }
+                }
+
+                $output .= ');<br/>';
             }
         }
 

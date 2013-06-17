@@ -6,13 +6,38 @@
 
 namespace Klathmon;
 
-//TODO: chokes on recursion!
-//TODO: add exception handler class
+/**
+ * Class Debug
+ *
+ * A nicer debugging class.
+ *
+ * ***DO NOT USE THIS IN PRODUCTION CODE FOR ANY REASON! IT IS MOST LIKELY FULL OF SPEED/SECURITY ISSUES!***
+ *
+ * Usage:
+ * Debug::dump($var); //echos the information.
+ * Debug::setEmail('LarryPage@google.com'); //Set the email address for ::email()
+ * Debug::email(); //Send the data in an email
+ * Debug::get(); //Returns a plain-text version of the data (no html)
+ *
+ * @package Klathmon
+ */
 abstract class Debug
 {
+    /**
+     * @var string
+     */
     private static $emailAddress;
 
 
+    /**
+     * Output the dump. (limit 5 variables because of limitation in func_get_args())
+     *
+     * @param mixed $var1
+     * @param mixed $var2
+     * @param mixed $var3
+     * @param mixed $var4
+     * @param mixed $var5
+     */
     public static function dump(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
     {
         echo "\n<div style=\"border:1px solid #ccc;padding:10px;margin:10px;font:14px courier;background:whitesmoke;display:block;border-radius:4px;font-family:monospace;color:#727272\">\n";
@@ -43,6 +68,17 @@ abstract class Debug
         echo "</div>\n";
     }
 
+    /**
+     * Return the dump (unformatted). (limit 5 variables because of limitation in func_get_args())
+     *
+     * @param mixed $var1
+     * @param mixed $var2
+     * @param mixed $var3
+     * @param mixed $var4
+     * @param mixed $var5
+     *
+     * @return string
+     */
     public static function get(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
     {
         ob_start();
@@ -56,6 +92,17 @@ abstract class Debug
         return $noTags;
     }
 
+    /**
+     * Email the dump to the address set with ::setEmail(). (limit 5 variables because of limitation in func_get_args())
+     *
+     * @param mixed $var1
+     * @param mixed $var2
+     * @param mixed $var3
+     * @param mixed $var4
+     * @param mixed $var5
+     *
+     * @throws \Exception
+     */
     public static function email(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
     {
         if (isset(self::$emailAddress)) {
@@ -73,12 +120,28 @@ abstract class Debug
         }
     }
 
+    /**
+     * Sets the email address for ::email()
+     *
+     * @param string $address
+     */
     public static function setEmail($address)
     {
         self::$emailAddress = $address;
     }
 
 
+    /**
+     * Takes any variable and calls the correct dump* function to format it correctly.
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return mixed
+     */
     private static function dumpSingle(&$var, $varName = null, $indent = 0, $forObject = false)
     {
         $type       = self::getType($var);
@@ -87,6 +150,17 @@ abstract class Debug
         return call_user_func_array("self::dump$type", $parameters); //Need to use array to pass $var by reference
     }
 
+    /**
+     * Formats an Integer
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpInteger(&$var, $varName, $indent, $forObject)
     {
         if ($forObject) {
@@ -101,6 +175,17 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Formats a Float
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpFloat(&$var, $varName, $indent, $forObject)
     {
         if ($forObject) {
@@ -115,11 +200,33 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Formats a Double (just calls dumpFloat)
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpDouble(&$var, $varName, $indent, $forObject)
     {
         return self::dumpFloat($var, $varName, $indent, $forObject);
     }
 
+    /**
+     * Formats a Boolean (outputs it as human readable TRUE or FALSE)
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpBoolean(&$var, $varName, $indent, $forObject)
     {
         $dispVar = ($var === true ? 'TRUE' : 'FALSE');
@@ -135,6 +242,17 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Formats a NULL value
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpNULL(&$var, $varName, $indent, $forObject)
     {
         $dispVar = 'NULL';
@@ -150,6 +268,17 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Formats a Resource
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpResource(&$var, $varName, $indent, $forObject)
     {
         $dispVar = get_resource_type($var);
@@ -165,6 +294,17 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Formats a String
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpString(&$var, $varName, $indent, $forObject)
     {
         $length  = strlen($var);
@@ -182,6 +322,19 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Formats an Array (and all elements in the array)
+     *
+     * TODO: Recursion fucks shit up!
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject If this is TRUE, $varName will be output directly (and not re-formatted at all). For use
+     *                         in formatting objects' things.
+     *
+     * @return string
+     */
     private static function dumpArray(&$var, $varName, $indent, $forObject)
     {
 
@@ -199,6 +352,19 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Formats an Object
+     * This one has a ton of custom code and relies heavily on Reflection.
+     *
+     * TODO: Recursion fucks shit up!
+     *
+     * @param mixed $var       The variable to be dumped
+     * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
+     * @param int   $indent    The indent level put before the output.
+     * @param bool  $forObject Not used here.
+     *
+     * @return string
+     */
     private static function dumpObject(&$var, $varName, $indent, $forObject)
     {
         $varName = self::getFormattedVarName($var, $varName);
@@ -209,7 +375,7 @@ abstract class Debug
             . "$varName = Object(<span style='color: #0099c5;'>{$reflect->name}</span>) {<br/>";
 
         if (count($reflect->getConstants()) != 0) {
-            //Constants
+            //Get all of the Constants in the object
             $output .= '<br/>';
             foreach ($reflect->getConstants() as $constName => $value) {
                 $nameFormat = "Constant[<span style=\"color: black;\">$constName</style>]";
@@ -218,7 +384,7 @@ abstract class Debug
         }
 
         if (count($reflect->getProperties()) != 0) {
-            //Properties
+            //Get all of the Properties in the object
             $output .= '<br/>';
             foreach ($reflect->getProperties() as $property) {
                 $view = ($property->isPrivate() ? 'Private' : ($property->isProtected() ? 'Protected' : 'Public'));
@@ -234,14 +400,21 @@ abstract class Debug
                 $output .= self::dumpSingle($propertyValue, $nameFormat, $indent + 1, true);
             }
         } else {
+            //If there are no properties, try iterating through it with a foreach()
+            //This handles areas where the object is highly dynamic (ex. SimpleXMLElement)
+            //Not really sure why/how this works, but it does.
             foreach ($var as $name => $value) {
+                //Convert my errors to exceptions so i can handle them dynamically
                 $oldErrorHandler = set_error_handler(__NAMESPACE__ . '\specialObjectErrorHandler');
                 try {
+                    //In SimpleXMLElement (and maybe others) this was the only way to get the variable value
                     $realValue = (string)$var->{$name};
                 } catch (\Exception $e) {
+                    //If it don't work, just set the value to value
                     $realValue = $value;
                 }
 
+                //Replace the old error handler.
                 set_error_handler($oldErrorHandler);
 
                 $output .= self::dumpSingle($realValue, $name, $indent + 1, false);
@@ -249,7 +422,7 @@ abstract class Debug
         }
 
         if (count($reflect->getMethods()) != 0) {
-            //Methods
+            //Get all of the Methods in the object
             $output .= '<br/>';
             foreach ($reflect->getMethods() as $method) {
                 $view   = ($method->isPrivate() ? 'Private' : ($method->isProtected() ? 'Protected' : 'Public'));
@@ -258,6 +431,7 @@ abstract class Debug
                 $output .= self::getIndent($indent + 1) . $view . $static . ' <span style="color: #0099c5">'
                     . $method->getName() . '</span>(';
 
+                //Get the parameters.
                 $parameters = $method->getParameters();
                 foreach ($parameters as $parameter) {
                     if ($parameter != reset($parameters)) {
@@ -266,6 +440,7 @@ abstract class Debug
                     $output .= '<span style="color: red;">$' . $parameter->getName() . '</span>';
 
                     try {
+                        //And get default values if they exist
                         $defaultValue = $parameter->getDefaultValue();
                         if (is_string($defaultValue) || $defaultValue == '') {
                             $output .= ' = <span style="color: green;">"' . $defaultValue . '"</span>';
@@ -289,6 +464,13 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Returns the indent text from the $indentNumber.
+     *
+     * @param int $indentNumber
+     *
+     * @return string
+     */
     private static function getIndent($indentNumber = 1)
     {
         $indentText = '&nbsp; &nbsp; &nbsp; &nbsp; ';
@@ -296,19 +478,28 @@ abstract class Debug
         return str_repeat($indentText, $indentNumber);
     }
 
+    /**
+     * Gets the type of the variable (Uppercase first letter, NULL is in all caps)
+     *
+     * @param mixed $var
+     *
+     * @return string
+     */
     private static function getType(&$var)
     {
-        if (is_array($var)) {
-            $type = 'Array';
-        } elseif (is_object($var)) {
-            $type = 'Object';
-        } else {
-            $type = ucfirst(gettype($var));
-        }
+        $type = ucfirst(gettype($var));
 
         return $type;
     }
 
+    /**
+     * Gets the formatted version of the variable name. ($varName if its a variable, ['varName'] if its in an array/object)
+     *
+     * @param mixed  $var
+     * @param string $varName
+     *
+     * @return string
+     */
     private static function getFormattedVarName(&$var, $varName)
     {
         if ($varName === null) {
@@ -320,6 +511,17 @@ abstract class Debug
         return $output;
     }
 
+    /**
+     * Uses some really cool trickery to get the name of the variable
+     * Stolen from this StackOverflow answer(http://stackoverflow.com/a/4034225/1724045)
+     *
+     * @param mixed  $var
+     * @param bool   $scope
+     * @param string $prefix
+     * @param string $suffix
+     *
+     * @return bool|int|string
+     */
     private static function getVarName(&$var, $scope = false, $prefix = 'UNIQUE', $suffix = 'VARIABLE')
     {
         if ($scope) {
@@ -341,6 +543,16 @@ abstract class Debug
     }
 }
 
+/**
+ * Used to 'convert' an error to an exception when trying to type-Juggle in the dumpObject function.
+ *
+ * @param $errno
+ * @param $errstr
+ * @param $errfile
+ * @param $errline
+ *
+ * @throws \ErrorException
+ */
 function specialObjectErrorHandler($errno, $errstr, $errfile, $errline)
 {
     if (E_RECOVERABLE_ERROR === $errno) {

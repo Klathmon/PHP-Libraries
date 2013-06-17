@@ -20,7 +20,7 @@ use PDO, Exception;
 class Database extends PDO
 {
     /**
-     * @var
+     * @var PDO
      */
     private static $instance;
 

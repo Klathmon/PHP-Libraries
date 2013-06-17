@@ -7,6 +7,7 @@
 namespace Klathmon;
 
 //TODO: chokes on recursion!
+//TODO: add exception handler class
 abstract class Debug
 {
     private static $emailAddress;

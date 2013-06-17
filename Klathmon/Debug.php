@@ -43,7 +43,6 @@ abstract class Debug
         echo "</div>\n";
     }
 
-
     public static function get(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
     {
         ob_start();
@@ -78,6 +77,7 @@ abstract class Debug
     {
         self::$emailAddress = $address;
     }
+
 
     private static function dumpSingle(&$var, $varName = null, $indent = 0, $forObject = false)
     {
@@ -122,7 +122,7 @@ abstract class Debug
 
     private static function dumpBoolean(&$var, $varName, $indent, $forObject)
     {
-        $var = ($var === true ? 'TRUE' : 'FALSE');
+        $dispVar = ($var === true ? 'TRUE' : 'FALSE');
         if ($forObject) {
             $output = self::getIndent($indent) . $varName;
         } else {
@@ -130,14 +130,14 @@ abstract class Debug
             $output  = self::getIndent($indent) . $varName;
         }
 
-        $output .= " = Boolean <span style='color: #92008d'>$var</span><br/>";
+        $output .= " = Boolean <span style='color: #92008d'>$dispVar</span><br/>";
 
         return $output;
     }
 
     private static function dumpNULL(&$var, $varName, $indent, $forObject)
     {
-        $var = 'NULL';
+        $dispVar = 'NULL';
         if ($forObject) {
             $output = self::getIndent($indent) . $varName;
         } else {
@@ -145,7 +145,22 @@ abstract class Debug
             $output  = self::getIndent($indent) . $varName;
         }
 
-        $output .= " = NULL <span style='color: #92008d'>$var</span><br/>";
+        $output .= " = NULL <span style='color: #92008d'>$dispVar</span><br/>";
+
+        return $output;
+    }
+
+    private static function dumpResource(&$var, $varName, $indent, $forObject)
+    {
+        $dispVar = get_resource_type($var);
+        if ($forObject) {
+            $output = self::getIndent($indent) . $varName;
+        } else {
+            $varName = self::getFormattedVarName($var, $varName);
+            $output  = self::getIndent($indent) . $varName;
+        }
+
+        $output .= " = Resource <span style='color: #92008d'>$dispVar</span><br/>";
 
         return $output;
     }
@@ -213,7 +228,7 @@ abstract class Debug
                 $propertyName  = $property->getName();
                 $propertyValue = $property->getValue($var);
 
-                $nameFormat = $view . $static . " <span style=\"color: red;\">$propertyName</span>";
+                $nameFormat = $view . $static . " <span style=\"color: red;\">$$propertyName</span>";
 
                 $output .= self::dumpSingle($propertyValue, $nameFormat, $indent + 1, true);
             }

@@ -15,31 +15,29 @@ abstract class Debug
 
     public static function dump(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
     {
-        echo "\n<div style=\"border:1px solid #ccc;padding:10px;margin:10px;font:14px courier;background:whitesmoke;display:block;border-radius:4px;\">\n";
+        echo "\n<div style=\"border:1px solid #ccc;padding:10px;margin:10px;font:14px courier;background:whitesmoke;display:block;border-radius:4px;font-family:monospace;color:#727272\">\n";
 
         $trace = debug_backtrace(false);
         $line  = @$trace[0]['line'];
         $file  = @$trace[0]['file'];
 
-        echo <<<HTML
-Line: <span style="color:green;">{$line}</span> &nbsp; File:<span style="color:green;"> "{$file}"</span><br/>
-HTML;
+        echo "Line: <span style=\"color:0099c5;\">{$line}</span> &nbsp; File:<span style=\"color:green;\"> \"{$file}\"</span><br/><br/>";
 
         //Can't use func_get_args() because it messes up my ability to get the variable name, so i have to fallback to this...
         if (!empty($var1)) {
-            echo self::singleDump($var1) . "<br/>";
+            echo self::dumpSingle($var1) . "<br/>";
         }
         if (!empty($var2)) {
-            echo self::singleDump($var2) . "<br/>";
+            echo self::dumpSingle($var2) . "<br/>";
         }
         if (!empty($var3)) {
-            echo self::singleDump($var3) . "<br/>";
+            echo self::dumpSingle($var3) . "<br/>";
         }
         if (!empty($var4)) {
-            echo self::singleDump($var4) . "<br/>";
+            echo self::dumpSingle($var4) . "<br/>";
         }
         if (!empty($var5)) {
-            echo self::singleDump($var5) . "<br/>";
+            echo self::dumpSingle($var5) . "<br/>";
         }
 
         echo "</div>\n";
@@ -48,29 +46,15 @@ HTML;
 
     public static function get(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
     {
-        $trace = debug_backtrace(false);
-        $line  = @$trace[0]['line'];
-        $file  = @$trace[0]['file'];
+        ob_start();
+        self::dump($var1, $var2, $var3, $var4, $var5);
+        $htmlOutput = ob_get_clean();
 
-        $output = "Line: {$line} File: \"{$file}\"\n";
+        $noNbsp = str_replace('&nbsp;', ' ', $htmlOutput);
+        $noBr   = str_replace('<br/>', "\n", $noNbsp);
+        $noTags = strip_tags($noBr);
 
-        if (!empty($var1)) {
-            $output .= self::singleDump($var1, false) . "\n";
-        }
-        if (!empty($var2)) {
-            $output .= self::singleDump($var2, false) . "\n";
-        }
-        if (!empty($var3)) {
-            $output .= self::singleDump($var3, false) . "\n";
-        }
-        if (!empty($var4)) {
-            $output .= self::singleDump($var4, false) . "\n";
-        }
-        if (!empty($var5)) {
-            $output .= self::singleDump($var5, false) . "\n";
-        }
-
-        return $output;
+        return $noTags;
     }
 
     public static function email(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
@@ -95,72 +79,169 @@ HTML;
         self::$emailAddress = $address;
     }
 
-
-    private static function singleDump(&$var, $html = true, $varNameSet = false, $indent = 1)
+    private static function dumpSingle(&$var, $varName = null, $indent = 0, $forObject = false)
     {
-        $green  = 'green';
-        $red    = 'red';
-        $gray   = '#a2a2a2';
-        $purple = '#92008d';
-        $blue   = '#0099c5';
+        $type       = self::getType($var);
+        $parameters = array(&$var, $varName, $indent, $forObject);
 
-        $tab = ($html ? '&nbsp;&nbsp;&nbsp;&nbsp;' : '    ');
-        $lb  = ($html ? '<br/>' : "\n");
+        return call_user_func_array("self::dump$type", $parameters); //Need to use array to pass $var by reference
+    }
 
-        $type        = self::getType($var);
-        $length      = self::getLength($var);
-        $varName     = ($varNameSet === false ? self::getVarName($var) : $varNameSet);
-        $doubleQuote = (is_string($var) ? '"' : '');
-        $singleQuote = ($varNameSet !== false ? '\'' : '');
-        $dollarSign  = ($varNameSet === false ? '$' : '');
-        $varColor    = ($dollarSign == '$' ? $red : $purple);
-
-        $var = ($var === true ? 'TRUE' : $var);
-        $var = ($var === false ? 'FALSE' : $var);
-
-        if ($html) {
-            $output
-                = <<<HTML
-[<span style="color: $varColor;">$dollarSign{$singleQuote}$varName{$singleQuote}</span>] = 
-<span style="color: $gray;">$type(</span><span style="color: $blue;">$length</span><span style="color: $gray;">)</span> 
-HTML;
+    private static function dumpInteger(&$var, $varName, $indent, $forObject)
+    {
+        if ($forObject) {
+            $output = self::getIndent($indent) . $varName;
         } else {
-            $output = "[$dollarSign{$singleQuote}$varName{$singleQuote}] = $type($length) ";
+            $varName = self::getFormattedVarName($var, $varName);
+            $output  = self::getIndent($indent) . $varName;
         }
 
-        if (is_array($var) || is_object($var)) {
-            $output .= "{{$lb}";
-            foreach ($var as $name => $item) {
-                $output .= str_repeat($tab, $indent);
-                $temp = & $item;
-                $output .= call_user_func(__METHOD__, $temp, $html, $name, $indent + 1);
-            }
-            $output .= str_repeat($tab, $indent - 1) . "}{$lb}";
-        } else {
-            if ($html) {
-                $output .= "<span style=\"color: $green;\">{$doubleQuote}$var{$doubleQuote}</span>$lb";
-            } else {
-                $output .= "{$doubleQuote}$var{$doubleQuote}$lb";
-            }
-        }
+        $output .= " = Integer <span style='color: #0099c5'>$var</span><br/>";
 
         return $output;
     }
 
-    private static function getLength(&$var)
+    private static function dumpFloat(&$var, $varName, $indent, $forObject)
     {
-        if (is_array($var)) {
-            $length = count($var);
-        } elseif (is_object($var)) {
-            $length = 0;
-            foreach ($var as $thing) {
-                $length++;
-            }
+        if ($forObject) {
+            $output = self::getIndent($indent) . $varName;
         } else {
-            $length = strlen($var);
+            $varName = self::getFormattedVarName($var, $varName);
+            $output  = self::getIndent($indent) . $varName;
         }
 
-        return $length;
+        $output .= " = Float <span style='color: #0099c5'>$var</span><br/>";
+
+        return $output;
+    }
+
+    private static function dumpDouble(&$var, $varName, $indent, $forObject)
+    {
+        return self::dumpFloat($var, $varName, $indent, $forObject);
+    }
+
+    private static function dumpBoolean(&$var, $varName, $indent, $forObject)
+    {
+        $var = ($var === true ? 'TRUE' : 'FALSE');
+        if ($forObject) {
+            $output = self::getIndent($indent) . $varName;
+        } else {
+            $varName = self::getFormattedVarName($var, $varName);
+            $output  = self::getIndent($indent) . $varName;
+        }
+
+        $output .= " = Boolean <span style='color: #92008d'>$var</span><br/>";
+
+        return $output;
+    }
+
+    private static function dumpNULL(&$var, $varName, $indent, $forObject)
+    {
+        $var = 'NULL';
+        if ($forObject) {
+            $output = self::getIndent($indent) . $varName;
+        } else {
+            $varName = self::getFormattedVarName($var, $varName);
+            $output  = self::getIndent($indent) . $varName;
+        }
+
+        $output .= " = NULL <span style='color: #92008d'>$var</span><br/>";
+
+        return $output;
+    }
+
+    private static function dumpString(&$var, $varName, $indent, $forObject)
+    {
+        $length  = strlen($var);
+        $dispVar = htmlentities($var);
+
+        if ($forObject) {
+            $output = self::getIndent($indent) . $varName;
+        } else {
+            $varName = self::getFormattedVarName($var, $varName);
+            $output  = self::getIndent($indent) . $varName;
+        }
+
+        $output .= " = String(<span style='color: #0099c5;'>$length</span>) <span style='color: green'>\"$dispVar\"</span><br/>";
+
+        return $output;
+    }
+
+    private static function dumpArray(&$var, $varName, $indent, $forObject)
+    {
+
+        $varName = self::getFormattedVarName($var, $varName);
+        $number  = count($var);
+
+        $output = self::getIndent($indent) . "$varName = Array(<span style='color: #0099c5;'>$number</span>) {<br/>";
+
+        foreach ($var as $name => &$item) {
+            $output .= self::dumpSingle($item, $name, $indent + 1);
+        }
+
+        $output .= self::getIndent($indent) . '}<br/>';
+
+        return $output;
+    }
+
+    private static function dumpObject(&$var, $varName, $indent, $forObject)
+    {
+        $varName = self::getFormattedVarName($var, $varName);
+        $reflect = new \ReflectionClass($var);
+
+
+        $output = self::getIndent($indent)
+            . "$varName = Object(<span style='color: #0099c5;'>{$reflect->name}</span>) {<br/>";
+
+        if (count($reflect->getConstants()) != 0) {
+            //Constants
+            foreach ($reflect->getConstants() as $constName => $value) {
+                $nameFormat = "Constant[<span style=\"color: black;\">$constName</style>]";
+                $output .= self::dumpSingle($value, $nameFormat, $indent + 1, true);
+            }
+        }
+
+        if (count($reflect->getProperties()) != 0) {
+            //Properties
+            foreach ($reflect->getProperties() as $property) {
+
+                $view = ($property->isPrivate() ? 'Private' : ($property->isProtected() ? 'Protected' : 'Public'));
+
+                $property->setAccessible(true);
+
+                $static        = ($property->isStatic() ? ' Static' : '');
+                $propertyName  = $property->getName();
+                $propertyValue = $property->getValue($var);
+
+                $nameFormat = $view . $static . " <span style=\"color: red;\">$propertyName</span>";
+
+                $output .= self::dumpSingle($propertyValue, $nameFormat, $indent + 1, true);
+            }
+        } else {
+            foreach ($var as $name => $value) {
+                $oldErrorHandler = set_error_handler(__NAMESPACE__ . '\specialObjectErrorHandler');
+                try {
+                    $realValue = (string)$var->{$name};
+                } catch (\Exception $e) {
+                    $realValue = $value;
+                }
+
+                set_error_handler($oldErrorHandler);
+
+                $output .= self::dumpSingle($realValue, $name, $indent + 1, false);
+            }
+        }
+
+        $output .= self::getIndent($indent) . '}<br/>';
+
+        return $output;
+    }
+
+    private static function getIndent($indentNumber = 1)
+    {
+        $indentText = '&nbsp; &nbsp; &nbsp; &nbsp; ';
+
+        return str_repeat($indentText, $indentNumber);
     }
 
     private static function getType(&$var)
@@ -174,6 +255,17 @@ HTML;
         }
 
         return $type;
+    }
+
+    private static function getFormattedVarName(&$var, $varName)
+    {
+        if ($varName === null) {
+            $output = '<span style="color: red;">$' . self::getVarName($var) . '</span>';
+        } else {
+            $output = '[\'<span style="color: green;">' . $varName . '</span>\']';
+        }
+
+        return $output;
     }
 
     private static function getVarName(&$var, $scope = false, $prefix = 'UNIQUE', $suffix = 'VARIABLE')
@@ -194,5 +286,12 @@ HTML;
         $var = $old;
 
         return $vname;
+    }
+}
+
+function specialObjectErrorHandler($errno, $errstr, $errfile, $errline)
+{
+    if (E_RECOVERABLE_ERROR === $errno) {
+        throw new \ErrorException($errstr, $errno, 0, $errfile, $errline);
     }
 }

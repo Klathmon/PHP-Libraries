@@ -116,18 +116,56 @@ class Login
     protected function displayLoginScreen()
     {
         ?>
+        <!--<link rel="stylesheet" type="text/css" href="style.css"/>-->
         <style>
-            DIV#Login {
-                width: 800px;
-                height: 400px;
+            DIV#login, DIV#login * {
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
             }
+
+            DIV#Login {
+                border: 1px solid #000000;
+                width: 600px;
+                height: 300px;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                margin-top: -150px;
+                margin-left: -300px;
+            }
+
+            DIV#Login .logoThing {
+                width: 100%;
+                height: 100px;
+                text-align: center;
+            }
+
+            DIV#Login .inputThing {
+                width: 100%;
+                display: inline-block;
+                text-align: center;
+                padding: 18px;
+            }
+
         </style>
         <div id="Login">
             <form id="LoginForm" method="POST">
                 <input type="hidden" id="logMeIn" name="logMeIn" value="Y">
-                <label for="username">Username: </label><input type="text" id="username" name="username" required>
-                <label for="password">Password: </label><input type="password" id="password" name="password" required>
-                <input type="submit" value="Submit" id="submit">
+
+                <div class="logoThing">
+                    <h1>Login</h1>
+                </div>
+                <div class="inputThing">
+                    <label for="username">Username: </label><input type="text" id="username" name="username" required>
+                </div>
+                <div class="inputThing">
+                    <label for="password">Password: </label><input type="password" id="password" name="password"
+                                                                   required>
+                </div>
+                <div class="inputThing">
+                    <input type="submit" value="Submit" id="submit">
+                </div>
             </form>
         </div>
         <?php

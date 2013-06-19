@@ -21,67 +21,39 @@ class Session
     const HASH_FUNCTION             = 'SHA256';
     const BITS_PER_CHARACTER        = '5';
     const ENTROPY_FILE              = '/dev/urandom';
-    const DEFAULT_ENTROPY_LENGTH    = '512';
-    const DEFAULT_SESSION_LENGTH    = '1800';
-    const INTERNAL_SESSION_DATA_VAR = 'KlathData';
+    const INTERNAL_SESSION_DATA_VAR = 'KlathmonSessionData';
 
-    /**
-     * @var string The cookie's name
-     */
-    private $sessionName;
     private $sessionLength;
-    private $sessionStorageDirectory;
-    private $entropyLength;
-
-    /**
-     * @param string $sessionName             The name of the cookie stored in the user's browser.
-     * @param string $sessionLength           The time (in seconds) that the session will be valid for.
-     * @param string $sessionStorageDirectory The directory that the session data will be stored in.
-     * @param string $entropyLength           The amount of entropy used in creating the cookie's value.
-     */
-    public function __construct(
-        $sessionName = 'KlathSession', $sessionLength = self::DEFAULT_SESSION_LENGTH,
-        $sessionStorageDirectory = '/tmp', $entropyLength = self::DEFAULT_ENTROPY_LENGTH
-    )
-    {
-        $this->sessionName             = $sessionName;
-        $this->sessionLength           = $sessionLength;
-        $this->sessionStorageDirectory = $sessionStorageDirectory;
-        $this->entropyLength           = $entropyLength;
-    }
 
     /**
      * Starts the Session
      *
-     * @throws \Exception 1: The Current session is not valid! (The current session is left UN-TOUCHED!)
+     * @param string $sessionName             The name of the cookie stored in the user's browser.
+     * @param int    $sessionLength           The time (in seconds) that the session will be valid for.
+     * @param string $sessionStorageDirectory The directory that the session data will be stored in.
+     * @param int    $entropyLength           The amount of entropy used in creating the cookie's value.
      */
-    public function start()
+    public function __construct(
+        $sessionName = 'SessionID', $sessionLength = 1800,
+        $sessionStorageDirectory = '/tmp', $entropyLength = 512
+    )
     {
+
+        $this->sessionLength = $sessionLength;
+
         ini_set('session.use_trans_sid', 0);
         ini_set('session.use_only_cookies', 1);
         ini_set('session.hash_function', self::HASH_FUNCTION);
         ini_set('session.hash_bits_per_character ', self::BITS_PER_CHARACTER);
         ini_set('session.entropy_file', self::ENTROPY_FILE);
 
-        ini_set('session.name', $this->sessionName);
-        ini_set('session.gc_maxlifetime', $this->sessionLength);
-        ini_set('session.cookie_lifetime', $this->sessionLength);
-        ini_set('session.save_path', $this->sessionStorageDirectory);
-        ini_set('session.entropy_length', $this->entropyLength);
+        ini_set('session.name', $sessionName);
+        ini_set('session.gc_maxlifetime', $sessionLength);
+        ini_set('session.cookie_lifetime', $sessionLength);
+        ini_set('session.save_path', $sessionStorageDirectory);
+        ini_set('session.entropy_length', $entropyLength);
 
         @session_start();
-
-
-        try {
-            $this->validateSession();
-        } catch (Exception $e) {
-            switch ($e->getCode()) {
-            case 1:
-            case 2:
-            case 3:
-                throw new Exception('Session is not valid!', 1);
-            }
-        }
 
         $array                 = $this->get(self::INTERNAL_SESSION_DATA_VAR);
         $array['lastActivity'] = time();
@@ -89,21 +61,39 @@ class Session
     }
 
     /**
+     * Will check to see if the session is valid (using various special checks and stuff)
+     * Does nothing if session is valid, throws Exception if session is bad
+     *
+     * @throws \Exception 1: Bad UserAgent 2: Bad Remote Address 3: The session was last used too long ago (Too old)
+     */
+    public function validateSession()
+    {
+        $data    = $this->get(self::INTERNAL_SESSION_DATA_VAR);
+        $sessLen = $this->sessionLength;
+
+        if ($data['userAgent'] != $_SERVER['HTTP_USER_AGENT']) {
+            throw new Exception('UserAgent is incorrect!', 1);
+        } elseif ($data['remoteAddress'] != $_SERVER['REMOTE_ADDR']) {
+            throw new Exception('IP Address of the user has changed!', 2);
+        } elseif ($data['lastActivity'] < (new \DateTime('now'))->modify("-$sessLen seconds")->format('U')
+        ) {
+            throw new Exception('Last Activity was too long ago!', 3);
+        }
+    }
+
+    /**
      * Starts a completely new session, will clobber anything in the old session (including data stored).
      */
     public function startNewSession()
     {
-        $this->destroySession();
+        $_SESSION = Array();
 
-        try {
-            $this->start();
-        } catch (Exception $e) {
-            //Do nothing!
-        }
+        $this->regenerateSession();
 
         $array = [
-            'userAgent'    => $_SERVER['HTTP_USER_AGENT'], 'remoteAddress' => $_SERVER['REMOTE_ADDR'],
-            'lastActivity' => time()
+            'userAgent'     => $_SERVER['HTTP_USER_AGENT'],
+            'remoteAddress' => $_SERVER['REMOTE_ADDR'],
+            'lastActivity'  => time()
         ];
 
         $this->set(self::INTERNAL_SESSION_DATA_VAR, $array);
@@ -122,7 +112,7 @@ class Session
      */
     public function destroySession()
     {
-        $_SESSION = Array();
+        $_SESSION = Array(); //Clear the array
 
         $parameters = session_get_cookie_params();
         setcookie(
@@ -130,9 +120,9 @@ class Session
             (new \DateTime('now'))->modify("-1 day")->format('U'),
             $parameters['path'], $parameters['domain'],
             $parameters['secure'], $parameters['httponly']
-        );
+        ); //Clear the user's cookie
 
-        @session_destroy();
+        session_destroy(); //Destroy the session completely.
     }
 
 
@@ -158,27 +148,4 @@ class Session
     {
         $_SESSION[$variable] = $value;
     }
-
-
-    /**
-     * Will check to see if the session is valid (using various special checks and stuff)
-     *
-     * @throws \Exception 1: Bad UserAgent 2: Bad Remote Address 3: The session was last used too long ago (Too old)
-     */
-    private function validateSession()
-    {
-        $data = $this->get(self::INTERNAL_SESSION_DATA_VAR);
-
-        if ($data['userAgent'] != $_SERVER['HTTP_USER_AGENT']) {
-            throw new Exception('UserAgent is incorrect!', 1);
-        } elseif ($data['remoteAddress'] != $_SERVER['REMOTE_ADDR']) {
-            throw new Exception('IP Address of the user has changed!', 2);
-        } elseif ($data['lastActivity'] < (new \DateTime('now'))->modify("-{$this->sessionLength} seconds")->format(
-                'U'
-            )
-        ) {
-            throw new Exception('Last Activity was too long ago!', 3);
-        }
-    }
-
 }

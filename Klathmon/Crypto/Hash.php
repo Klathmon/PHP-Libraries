@@ -4,7 +4,7 @@
  * Date: 2/12/2013
  */
 
-namespace Klathmon\Crypt;
+namespace Klathmon\Crypto;
 
 /**
  * Class Hash
@@ -44,7 +44,7 @@ class Hash
      * @param int    $difficulty The difficulty level (differs for each algorithm)
      * @param string $algorithm  The CRYPT constant that represents the algorithm you want to use (in string form)
      *
-     * @throws \Exception 1: Crypt is not available. 2: Algorithm is not supported. 3: Invalid Difficulty. 4: Invalid Algorithm.
+     * @throws \Exception 1: Crypto is not available. 2: Algorithm is not supported. 3: Invalid Difficulty. 4: Invalid Algorithm.
      */
     public function __construct($difficulty = 10, $algorithm = 'CRYPT_BLOWFISH')
     {

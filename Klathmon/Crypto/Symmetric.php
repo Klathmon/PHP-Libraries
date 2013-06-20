@@ -4,7 +4,7 @@
  * Date: 2/22/2013
  */
 
-namespace Klathmon\Crypt;
+namespace Klathmon\Crypto;
 
 /**
  * Class Symmetric
@@ -19,7 +19,7 @@ namespace Klathmon\Crypt;
  *
  * @package Klathmon
  */
-class Symmetric
+class Symmetric implements EncryptionInterface
 {
     /**
      * Version number, If i want to upgrade this in the future, increment the version number (integer only) to still

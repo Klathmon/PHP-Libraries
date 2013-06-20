@@ -6,7 +6,7 @@
 
 
 namespace Klathmon\Login;
-use \Klathmon\Database, \Klathmon\Crypt\Hash, \Exception;
+use \Klathmon\Database, \Klathmon\Crypto\Hash, \Exception;
 
 /**
  * Class Login

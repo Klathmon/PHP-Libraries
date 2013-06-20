@@ -38,7 +38,7 @@ class Database extends PDO
      */
     public static function getInstance($host = null, $database = null, $username = null, $password = null)
     {
-        if (!isset($instance)) {
+        if (!isset(self::$instance)) {
             if ($host != null || $database != null || $username != null || $password != null) {
                 try {
                     self::$instance = new PDO("mysql:host=$host;dbname=$database", $username, $password);

@@ -6,6 +6,8 @@
 
 namespace Klathmon\Traits;
 
+use \Exception;
+
 trait Singleton
 {
     private static $instance;
@@ -16,8 +18,8 @@ trait Singleton
             try {
                 $reflection     = new \ReflectionClass(__CLASS__);
                 self::$instance = $reflection->newInstanceArgs(func_get_args());
-            } catch (\Exception $e) {
-                throw new \Exception('Error creating object!');
+            } catch (Exception $e) {
+                throw new Exception('Error creating object!');
             }
         }
 

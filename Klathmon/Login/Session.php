@@ -25,6 +25,19 @@ class Session
 
     private $sessionLength;
 
+    public function AutoStartSession()
+    {
+        $session = new self();
+
+        try {
+            $session->validateSession();
+        } catch (Exception $e) {
+            $session->startnewSession();
+        }
+
+        return $session;
+    }
+
     /**
      * Starts the Session
      *

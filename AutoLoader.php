@@ -22,6 +22,9 @@ function AutoLoader($class)
     if ($library == __NAMESPACE__) {
         //Any of my classes.
         $path = __DIR__ . DIRECTORY_SEPARATOR . 'Klathmon' . DIRECTORY_SEPARATOR;
+    } elseif ($library == 'Wrench') {
+        //WideImage Library.
+        $path = __DIR__ . DIRECTORY_SEPARATOR . $library . DIRECTORY_SEPARATOR;
     } elseif ($library == 'WideImage') {
         //WideImage Library.
         $path           = __DIR__ . DIRECTORY_SEPARATOR . 'WideImage' . DIRECTORY_SEPARATOR;

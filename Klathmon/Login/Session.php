@@ -25,7 +25,7 @@ class Session
 
     private $sessionLength;
 
-    public function AutoStartSession()
+    public static function AutoStartSession()
     {
         $session = new self();
 

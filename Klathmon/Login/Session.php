@@ -25,9 +25,12 @@ class Session
 
     private $sessionLength;
 
-    public static function AutoStartSession()
+    public static function AutoStartSession(
+        $sessionName = 'SessionID', $sessionLength = 1800,
+        $sessionStorageDirectory = '/tmp', $entropyLength = 512
+    )
     {
-        $session = new self();
+        $session = new self($sessionName, $sessionLength, $sessionStorageDirectory, $entropyLength);
 
         try {
             $session->validateSession();

@@ -141,6 +141,11 @@ class Session
         session_destroy(); //Destroy the session completely.
     }
 
+    public function getID()
+    {
+        return session_id();
+    }
+
 
     /**
      * Gets information from the session.

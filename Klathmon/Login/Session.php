@@ -19,18 +19,17 @@ use \Exception;
 class Session
 {
     const HASH_FUNCTION             = 'SHA256';
-    const BITS_PER_CHARACTER        = '5';
     const ENTROPY_FILE              = '/dev/urandom';
     const INTERNAL_SESSION_DATA_VAR = 'KlathmonSessionData';
 
     private $sessionLength;
 
     public static function AutoStartSession(
-        $sessionName = 'SessionID', $sessionLength = 1800,
+        $sessionName = 'SessionID', $sessionLength = 1800, $bitsPerCharacter = 5,
         $sessionStorageDirectory = '/tmp', $entropyLength = 512
     )
     {
-        $session = new self($sessionName, $sessionLength, $sessionStorageDirectory, $entropyLength);
+        $session = new self($sessionName, $sessionLength, $bitsPerCharacter, $sessionStorageDirectory, $entropyLength);
 
         try {
             $session->validateSession();
@@ -46,11 +45,12 @@ class Session
      *
      * @param string $sessionName             The name of the cookie stored in the user's browser.
      * @param int    $sessionLength           The time (in seconds) that the session will be valid for.
+     * @param int    $bitsPerCharacter        The amount of bits per character in the session name.
      * @param string $sessionStorageDirectory The directory that the session data will be stored in.
      * @param int    $entropyLength           The amount of entropy used in creating the cookie's value.
      */
     public function __construct(
-        $sessionName = 'SessionID', $sessionLength = 1800,
+        $sessionName = 'SessionID', $sessionLength = 1800, $bitsPerCharacter = 5,
         $sessionStorageDirectory = '/tmp', $entropyLength = 512
     )
     {
@@ -60,7 +60,7 @@ class Session
         ini_set('session.use_trans_sid', 0);
         ini_set('session.use_only_cookies', 1);
         ini_set('session.hash_function', self::HASH_FUNCTION);
-        ini_set('session.hash_bits_per_character ', self::BITS_PER_CHARACTER);
+        ini_set('session.hash_bits_per_character ', $bitsPerCharacter);
         ini_set('session.entropy_file', self::ENTROPY_FILE);
 
         ini_set('session.name', $sessionName);

@@ -25,20 +25,17 @@ class Session
     private $sessionLength;
 
     /**
-     * @param string $sessionName
-     * @param int    $sessionLength
-     * @param int    $bitsPerCharacter
-     * @param string $sessionStorageDirectory
-     * @param int    $entropyLength
+     * Starts the session handler and returns a session object.
+     *
+     * To get function parameters, see __constructor()
      *
      * @return Session
      */
-    public static function AutoStartSession(
-        $sessionName = 'SessionID', $sessionLength = 1800, $bitsPerCharacter = 5,
-        $sessionStorageDirectory = '/tmp', $entropyLength = 512
-    )
+    public static function AutoStartSession()
     {
-        $session = new self($sessionName, $sessionLength, $bitsPerCharacter, $sessionStorageDirectory, $entropyLength);
+        $reflection = new \ReflectionClass(__CLASS__);
+
+        $session = $reflection->newInstanceArgs(func_get_args());
 
         try {
             $session->validateSession();

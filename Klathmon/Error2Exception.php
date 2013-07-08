@@ -110,6 +110,7 @@ class Error2Exception extends \Exception
 
     public static function handler($errNum, $errStr, $errFile, $errLine, $errContext)
     {
-        throw new Error2Exception($errNum, $errStr, $errFile, $errLine, $errContext);
+        $class = __CLASS__;
+        throw new $class($errNum, $errStr, $errFile, $errLine, $errContext);
     }
 }

@@ -24,6 +24,15 @@ class Session
 
     private $sessionLength;
 
+    /**
+     * @param string $sessionName
+     * @param int    $sessionLength
+     * @param int    $bitsPerCharacter
+     * @param string $sessionStorageDirectory
+     * @param int    $entropyLength
+     *
+     * @return Session
+     */
     public static function AutoStartSession(
         $sessionName = 'SessionID', $sessionLength = 1800, $bitsPerCharacter = 5,
         $sessionStorageDirectory = '/tmp', $entropyLength = 512

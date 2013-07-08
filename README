@@ -1,4 +1,4 @@
-My drop-in and use PHP Libraries. (Requires PHP >= 5.3)
+My drop-in and use PHP Libraries. (Requires PHP >= 5.4)
 
 To use it, put the repo inside your includes/library directory, and include the Loader.php file. That file will take care of all the includes via an AutoLoader.
 

@@ -15,12 +15,8 @@ trait Singleton
     public static function getInstance()
     {
         if (!isset(self::$instance)) {
-            try {
-                $reflection     = new \ReflectionClass(__CLASS__);
-                self::$instance = $reflection->newInstanceArgs(func_get_args());
-            } catch (Exception $e) {
-                throw new Exception('Error creating object!');
-            }
+            $reflection     = new \ReflectionClass(__CLASS__);
+            self::$instance = $reflection->newInstanceArgs(func_get_args());
         }
 
         return self::$instance;

@@ -322,6 +322,14 @@ abstract class Debug
         return $output;
     }
 
+    private static function dumpRecursion(&$var, $varName, $indent, $forObject = false)
+    {
+        $output = self::getIndent($indent + 1) . self::getFormattedVarName($var, $varName);
+        $output .= " = *RECURSION*</br>";
+
+        return $output;
+    }
+
     /**
      * Formats an Array (and all elements in the array)
      *
@@ -337,14 +345,17 @@ abstract class Debug
      */
     private static function dumpArray(&$var, $varName, $indent, $forObject)
     {
-
         $varName = self::getFormattedVarName($var, $varName);
         $number  = count($var);
 
         $output = self::getIndent($indent) . "$varName = Array(<span style='color: #0099c5;'>$number</span>) {<br/>";
 
         foreach ($var as $name => &$item) {
-            $output .= self::dumpSingle($item, $name, $indent + 1);
+            if (is_array($item) && self::isRecursiveArray($item)) {
+                $output .= self::dumpRecursion($item, $name, $indent + 1);
+            } else {
+                $output .= self::dumpSingle($item, $name, $indent + 1);
+            }
         }
 
         $output .= self::getIndent($indent) . '}<br/>';
@@ -540,6 +551,44 @@ abstract class Debug
         $var = $old;
 
         return $vname;
+    }
+
+    private static function removeLastElementIfSame(array & $array, $reference)
+    {
+        if (end($array) === $reference) {
+            unset($array[key($array)]);
+        }
+    }
+
+    private static function isRecursiveArrayIteration(array & $array, $reference)
+    {
+        $last_element = end($array);
+        if ($reference === $last_element) {
+            return true;
+        }
+        $array[] = $reference;
+
+        foreach ($array as &$element) {
+            if (is_array($element)) {
+                $functionName = __FUNCTION__;
+                if (self::$functionName($element, $reference)) {
+                    self::removeLastElementIfSame($array, $reference);
+
+                    return true;
+                }
+            }
+        }
+
+        self::removeLastElementIfSame($array, $reference);
+
+        return false;
+    }
+
+    public static function isRecursiveArray(array $array)
+    {
+        $some_reference = new \stdclass();
+
+        return self::isRecursiveArrayIteration($array, $some_reference);
     }
 }
 

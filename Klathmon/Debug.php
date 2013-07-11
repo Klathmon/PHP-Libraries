@@ -325,15 +325,13 @@ abstract class Debug
     private static function dumpRecursion(&$var, $varName, $indent, $forObject = false)
     {
         $output = self::getIndent($indent + 1) . self::getFormattedVarName($var, $varName);
-        $output .= " = *RECURSION*</br>";
+        $output .= " = <span style=\"color: red;\">*RECURSION*</span></br>";
 
         return $output;
     }
 
     /**
      * Formats an Array (and all elements in the array)
-     *
-     * TODO: Recursion fucks shit up!
      *
      * @param mixed $var       The variable to be dumped
      * @param null  $varName   The name of the variable, if empty, it will attempt to get it automatically.
@@ -389,7 +387,7 @@ abstract class Debug
             //Get all of the Constants in the object
             $output .= '<br/>';
             foreach ($reflect->getConstants() as $constName => $value) {
-                $nameFormat = "Constant[<span style=\"color: black;\">$constName</style>]";
+                $nameFormat = "Constant[<span style=\"color: black;\">{$constName}</style>]";
                 $output .= self::dumpSingle($value, $nameFormat, $indent + 1, true);
             }
         }

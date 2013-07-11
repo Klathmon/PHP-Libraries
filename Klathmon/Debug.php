@@ -387,7 +387,7 @@ abstract class Debug
             //Get all of the Constants in the object
             $output .= '<br/>';
             foreach ($reflect->getConstants() as $constName => $value) {
-                $nameFormat = "Constant[<span style=\"color: black;\">{$constName}</style>]";
+                $nameFormat = "Constant[<span style='color: black;'>{$constName}</span>]";
                 $output .= self::dumpSingle($value, $nameFormat, $indent + 1, true);
             }
         }

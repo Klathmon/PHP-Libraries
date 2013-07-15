@@ -27,7 +27,7 @@ class Logger
         $message = '[' . $dateTime->format('l F jS, Y h:i:s A e') . '] ';
         $message .= $data . "\n";
 
-        fwrite($this->filePointer, $data);
+        fwrite($this->filePointer, $message);
     }
 
     public function close()

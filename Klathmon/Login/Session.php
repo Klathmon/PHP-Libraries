@@ -18,33 +18,13 @@ use \Exception;
  */
 class Session
 {
+    use \Klathmon\Traits\Singleton;
+
     const HASH_FUNCTION             = 'SHA256';
     const ENTROPY_FILE              = '/dev/urandom';
     const INTERNAL_SESSION_DATA_VAR = 'KlathmonSessionData';
 
     private $sessionLength;
-
-    /**
-     * Starts the session handler and returns a session object.
-     *
-     * To get function parameters, see __constructor()
-     *
-     * @return Session
-     */
-    public static function AutoStartSession()
-    {
-        $reflection = new \ReflectionClass(__CLASS__);
-
-        $session = $reflection->newInstanceArgs(func_get_args());
-
-        try {
-            $session->validateSession();
-        } catch (Exception $e) {
-            $session->startnewSession();
-        }
-
-        return $session;
-    }
 
     /**
      * Starts the Session

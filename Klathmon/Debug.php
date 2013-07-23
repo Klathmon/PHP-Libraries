@@ -23,6 +23,8 @@ namespace Klathmon;
  */
 abstract class Debug
 {
+    private static $emailBacktrace = false;
+
     /**
      * @var string
      */
@@ -43,8 +45,13 @@ abstract class Debug
         echo "\n<div style=\"border:1px solid #ccc;padding:10px;margin:10px;font:14px courier;background:whitesmoke;display:block;border-radius:4px;font-family:monospace;color:#727272\">\n";
 
         $trace = debug_backtrace(false);
-        $line  = @$trace[0]['line'];
-        $file  = @$trace[0]['file'];
+        if (self::$emailBacktrace) {
+            $line = @$trace[1]['line'];
+            $file = @$trace[1]['file'];
+        } else {
+            $line = @$trace[0]['line'];
+            $file = @$trace[0]['file'];
+        }
 
         echo "Line: <span style=\"color:0099c5;\">{$line}</span> &nbsp; File:<span style=\"color:green;\"> \"{$file}\"</span><br/><br/>";
 
@@ -106,9 +113,11 @@ abstract class Debug
     public static function email(&$var1, &$var2 = '', &$var3 = '', &$var4 = '', &$var5 = '')
     {
         if (isset(self::$emailAddress)) {
+            self::$emailBacktrace = true;
             ob_start();
             self::dump($var1, $var2, $var3, $var4, $var5);
-            $output = ob_get_clean();
+            $output               = ob_get_clean();
+            self::$emailBacktrace = false;
 
             $headers = 'MIME-Version: 1.0' . "\r\n";
             $headers .= 'Content-type: text/html; chrset=UTF-8' . "\r\n";
